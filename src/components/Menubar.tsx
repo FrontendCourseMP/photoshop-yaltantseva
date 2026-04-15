@@ -1,3 +1,5 @@
+import { useEffect } from "react"
+import { useImageFile } from "@/hooks/useImageFile"
 import {
   Menubar,
   MenubarCheckboxItem,
@@ -5,8 +7,6 @@ import {
   MenubarGroup,
   MenubarItem,
   MenubarMenu,
-  MenubarRadioGroup,
-  MenubarRadioItem,
   MenubarSeparator,
   MenubarShortcut,
   MenubarSub,
@@ -15,95 +15,98 @@ import {
   MenubarTrigger,
 } from "./ui/menubar"
 
-export function MenubarDemo() {
+export function MenubarDemo({ onImageLoad }: { onImageLoad: (d: ImageData) => void }) {
+  const { openFile, handleFile, saveAs, inputRef, imageData } = useImageFile()
+
+  useEffect(() => {
+    if (imageData) onImageLoad(imageData)
+  }, [imageData, onImageLoad])
+
   return (
-    <Menubar className="">
-      <MenubarMenu>
-        <MenubarTrigger>Файл</MenubarTrigger>
-        <MenubarContent>
-          <MenubarGroup>
-            <MenubarItem>
-              Создать... <MenubarShortcut>⌘C</MenubarShortcut>
-            </MenubarItem>
-            <MenubarItem>
-              Открыть... <MenubarShortcut>⌘O</MenubarShortcut>
-            </MenubarItem>
-            <MenubarSub>
-              <MenubarSubTrigger>Сохранить как...</MenubarSubTrigger>
-              <MenubarSubContent>
-                <MenubarGroup>
-                  <MenubarItem>PNG</MenubarItem>
-                  <MenubarItem>JPG</MenubarItem>
-                  <MenubarItem>GB7</MenubarItem>
-                </MenubarGroup>
-              </MenubarSubContent>
-            </MenubarSub>
-          </MenubarGroup>
-        </MenubarContent>
-      </MenubarMenu>
-      <MenubarMenu>
-        <MenubarTrigger>Правка</MenubarTrigger>
-        <MenubarContent>
-          <MenubarGroup>
-            <MenubarItem>
-              Отменить <MenubarShortcut>⌘ctrl+Z</MenubarShortcut>
-            </MenubarItem>
-            <MenubarItem>
-              Вернуть <MenubarShortcut>⌘ctrl+Y</MenubarShortcut>
-            </MenubarItem>
-          </MenubarGroup>
-          <MenubarSeparator />
-          <MenubarGroup>
-            <MenubarItem>Вырезать</MenubarItem>
-            <MenubarItem>Копировать</MenubarItem>
-            <MenubarItem>Вставить</MenubarItem>
-          </MenubarGroup>
-        </MenubarContent>
-      </MenubarMenu>
-      <MenubarMenu>
-        <MenubarTrigger>Вид</MenubarTrigger>
-        <MenubarContent className="w-44">
-          <MenubarGroup>
-            <MenubarCheckboxItem>Bookmarks Bar</MenubarCheckboxItem>
-            <MenubarCheckboxItem checked>Full URLs</MenubarCheckboxItem>
-          </MenubarGroup>
-          <MenubarSeparator />
-          <MenubarGroup>
-            <MenubarItem inset>
-              Reload <MenubarShortcut>⌘R</MenubarShortcut>
-            </MenubarItem>
-            <MenubarItem disabled inset>
-              Force Reload <MenubarShortcut>⇧⌘R</MenubarShortcut>
-            </MenubarItem>
-          </MenubarGroup>
-          <MenubarSeparator />
-          <MenubarGroup>
-            <MenubarItem inset>Toggle Fullscreen</MenubarItem>
-          </MenubarGroup>
-          <MenubarSeparator />
-          <MenubarGroup>
-            <MenubarItem inset>Hide Sidebar</MenubarItem>
-          </MenubarGroup>
-        </MenubarContent>
-      </MenubarMenu>
-      <MenubarMenu>
-        <MenubarTrigger>Фильтры</MenubarTrigger>
-        <MenubarContent>
-          <MenubarRadioGroup value="benoit">
-            <MenubarRadioItem value="andy">Andy</MenubarRadioItem>
-            <MenubarRadioItem value="benoit">Benoit</MenubarRadioItem>
-            <MenubarRadioItem value="Luis">Luis</MenubarRadioItem>
-          </MenubarRadioGroup>
-          <MenubarSeparator />
-          <MenubarGroup>
-            <MenubarItem inset>Edit...</MenubarItem>
-          </MenubarGroup>
-          <MenubarSeparator />
-          <MenubarGroup>
-            <MenubarItem inset>Add Profile...</MenubarItem>
-          </MenubarGroup>
-        </MenubarContent>
-      </MenubarMenu>
-    </Menubar>
+    <>
+      <input
+        ref={inputRef}
+        type="file"
+        accept=".png,.jpg,.jpeg,.gb7"
+        className="hidden"
+        onChange={handleFile}
+      />
+
+      <Menubar>
+        <MenubarMenu>
+          <MenubarTrigger>Файл</MenubarTrigger>
+          <MenubarContent>
+            <MenubarGroup>
+              <MenubarItem onSelect={openFile}>
+                Открыть... <MenubarShortcut>⌘O</MenubarShortcut>
+              </MenubarItem>
+              <MenubarSeparator />
+              <MenubarSub>
+                <MenubarSubTrigger>Сохранить как...</MenubarSubTrigger>
+                <MenubarSubContent>
+                  <MenubarGroup>
+                    <MenubarItem onSelect={() => saveAs("png")}>PNG</MenubarItem>
+                    <MenubarItem onSelect={() => saveAs("jpg")}>JPG</MenubarItem>
+                    <MenubarItem onSelect={() => saveAs("gb7")}>GB7</MenubarItem>
+                  </MenubarGroup>
+                </MenubarSubContent>
+              </MenubarSub>
+            </MenubarGroup>
+          </MenubarContent>
+        </MenubarMenu>
+
+        <MenubarMenu>
+          <MenubarTrigger>Правка</MenubarTrigger>
+          <MenubarContent>
+            <MenubarGroup>
+              <MenubarItem>
+                Отменить <MenubarShortcut>⌃Z</MenubarShortcut>
+              </MenubarItem>
+              <MenubarItem>
+                Вернуть <MenubarShortcut>⌃Y</MenubarShortcut>
+              </MenubarItem>
+            </MenubarGroup>
+            <MenubarSeparator />
+            <MenubarGroup>
+              <MenubarItem>Вырезать</MenubarItem>
+              <MenubarItem>Копировать</MenubarItem>
+              <MenubarItem>Вставить</MenubarItem>
+            </MenubarGroup>
+          </MenubarContent>
+        </MenubarMenu>
+
+        <MenubarMenu>
+          <MenubarTrigger>Вид</MenubarTrigger>
+          <MenubarContent>
+            <MenubarGroup>
+              <MenubarItem>
+                Увеличить <MenubarShortcut>⌘+</MenubarShortcut>
+              </MenubarItem>
+              <MenubarItem>
+                Уменьшить <MenubarShortcut>⌘-</MenubarShortcut>
+              </MenubarItem>
+              <MenubarItem>
+                По размеру окна <MenubarShortcut>⌘0</MenubarShortcut>
+              </MenubarItem>
+            </MenubarGroup>
+            <MenubarSeparator />
+            <MenubarGroup>
+              <MenubarCheckboxItem>Строка состояния</MenubarCheckboxItem>
+            </MenubarGroup>
+          </MenubarContent>
+        </MenubarMenu>
+
+        <MenubarMenu>
+          <MenubarTrigger>Фильтры</MenubarTrigger>
+          <MenubarContent>
+            <MenubarGroup>
+              <MenubarItem disabled>Оттенки серого</MenubarItem>
+              <MenubarItem disabled>Инверсия</MenubarItem>
+              <MenubarItem disabled>Размытие</MenubarItem>
+            </MenubarGroup>
+          </MenubarContent>
+        </MenubarMenu>
+      </Menubar>
+    </>
   )
 }
