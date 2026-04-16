@@ -1,5 +1,6 @@
 import { useState, useRef } from "react"
 import { loadImageFile, saveImageAs } from "@/lib/imageUtils"
+import { decodeGB7, saveAsGB7 } from "@/lib/gb7"
 
 export function useImageFile() {
   const [imageData, setImageData] = useState<ImageData | null>(null)
@@ -10,16 +11,26 @@ export function useImageFile() {
   const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
+
+    const ext = file.name.split(".").pop()?.toLowerCase()
+
     try {
-      setImageData(await loadImageFile(file))
+      if (ext === "gb7") {
+        const buffer = await file.arrayBuffer()
+        setImageData(decodeGB7(buffer))
+      } else {
+        setImageData(await loadImageFile(file))
+      }
     } catch (err) {
-      alert("Ошибка: " + (err as Error).message)
+      alert("Ошибка загрузки: " + (err as Error).message)
     }
+
     e.target.value = ""
   }
 
   const saveAs = (format: "png" | "jpg" | "gb7") => {
     if (!imageData) { alert("Нет изображения для сохранения"); return }
+    if (format === "gb7") saveAsGB7(imageData)
     else saveImageAs(imageData, format)
   }
 

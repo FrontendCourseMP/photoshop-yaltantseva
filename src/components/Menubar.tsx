@@ -59,18 +59,18 @@ export function MenubarDemo({ onImageLoad }: { onImageLoad: (d: ImageData) => vo
           <MenubarTrigger>Правка</MenubarTrigger>
           <MenubarContent>
             <MenubarGroup>
-              <MenubarItem>
+              <MenubarItem disabled>
                 Отменить <MenubarShortcut>⌃Z</MenubarShortcut>
               </MenubarItem>
-              <MenubarItem>
+              <MenubarItem disabled>
                 Вернуть <MenubarShortcut>⌃Y</MenubarShortcut>
               </MenubarItem>
             </MenubarGroup>
             <MenubarSeparator />
             <MenubarGroup>
-              <MenubarItem>Вырезать</MenubarItem>
-              <MenubarItem>Копировать</MenubarItem>
-              <MenubarItem>Вставить</MenubarItem>
+              <MenubarItem disabled>Вырезать</MenubarItem>
+              <MenubarItem disabled>Копировать</MenubarItem>
+              <MenubarItem disabled>Вставить</MenubarItem>
             </MenubarGroup>
           </MenubarContent>
         </MenubarMenu>
@@ -79,19 +79,21 @@ export function MenubarDemo({ onImageLoad }: { onImageLoad: (d: ImageData) => vo
           <MenubarTrigger>Вид</MenubarTrigger>
           <MenubarContent>
             <MenubarGroup>
-              <MenubarItem>
+              <MenubarItem disabled>
                 Увеличить <MenubarShortcut>⌘+</MenubarShortcut>
               </MenubarItem>
-              <MenubarItem>
+              <MenubarItem disabled>
                 Уменьшить <MenubarShortcut>⌘-</MenubarShortcut>
               </MenubarItem>
-              <MenubarItem>
+              <MenubarItem disabled>
                 По размеру окна <MenubarShortcut>⌘0</MenubarShortcut>
               </MenubarItem>
             </MenubarGroup>
             <MenubarSeparator />
             <MenubarGroup>
-              <MenubarCheckboxItem>Строка состояния</MenubarCheckboxItem>
+              <MenubarCheckboxItem disabled>
+                Строка состояния
+              </MenubarCheckboxItem>
             </MenubarGroup>
           </MenubarContent>
         </MenubarMenu>
