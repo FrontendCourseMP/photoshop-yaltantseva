@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { Canvas } from './components/Canvas';
 import { StatusBar } from './components/StatusBar';
 import { Toolbar } from './components/Toolbar';
-import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 
 function App() {
   const [imageData, setImageData] = useState<ImageData | null>(null);
@@ -21,35 +20,34 @@ function App() {
 
   const handleToolSelect = (tool: string) => {
     setActiveTool(tool);
-    console.log("Выбран инструмент:", tool === "cursor" ? "Курсор" : "Пипетка");
   };
 
   return (
-    <SidebarProvider>
-      <div className="w-full min-h-screen flex">
+    <div className="w-full min-h-screen flex flex-col">
+      {/* Menubar вверху */}
+      <div className="border-b p-2">
+        <MenubarDemo onImageLoad={setImageData} />
+      </div>
+      
+      {/* Основное содержимое: Toolbar + Canvas */}
+      <div className="flex-1 flex overflow-hidden">
         <Toolbar 
           activeTool={activeTool} 
           onToolSelect={handleToolSelect} 
         />
         
-        <div className="flex-1 flex flex-col">
-          <div className="border-b p-2 flex items-center">
-            <SidebarTrigger />
-            <MenubarDemo onImageLoad={setImageData} />
-          </div>
-          
-          <main className="flex-1 flex items-center justify-center p-4">
-            <Canvas 
-              imageData={imageData} 
-              tool={activeTool} 
-              onPixelClick={handlePixelClick} 
-            />
-          </main>
-          
-          <StatusBar imageData={imageData} />
-        </div>
+        <main className="flex-1 flex items-center justify-center p-4 overflow-auto">
+          <Canvas 
+            imageData={imageData} 
+            tool={activeTool} 
+            onPixelClick={handlePixelClick} 
+          />
+        </main>
       </div>
-    </SidebarProvider>
+      
+      {/* StatusBar внизу */}
+      <StatusBar imageData={imageData} />
+    </div>
   );
 }
 
