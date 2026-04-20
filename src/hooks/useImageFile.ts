@@ -1,38 +1,35 @@
-import { useState, useRef } from "react"
-import { loadImageFile, saveImageAs } from "@/lib/imageUtils"
-import { decodeGB7, saveAsGB7 } from "@/lib/gb7"
+import { useState, useRef } from 'react';
+import { DefaultImageHandler, ImageDataWrapper } from '@/lib/imageHandler';
 
 export function useImageFile() {
-  const [imageData, setImageData] = useState<ImageData | null>(null)
-  const inputRef = useRef<HTMLInputElement>(null)
+  const [imageData, setImageData] = useState<ImageData | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const handler = new DefaultImageHandler();
 
-  const openFile = () => inputRef.current?.click()
+  const openFile = () => inputRef.current?.click();
 
   const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-
-    const ext = file.name.split(".").pop()?.toLowerCase()
+    const file = e.target.files?.[0];
+    if (!file) return;
 
     try {
-      if (ext === "gb7") {
-        const buffer = await file.arrayBuffer()
-        setImageData(decodeGB7(buffer))
-      } else {
-        setImageData(await loadImageFile(file))
-      }
+      const wrapper = await handler.load(file);
+      setImageData(wrapper.data);
     } catch (err) {
-      alert("Ошибка загрузки: " + (err as Error).message)
+      alert('Ошибка загрузки: ' + (err as Error).message);
     }
 
-    e.target.value = ""
-  }
+    e.target.value = '';
+  };
 
-  const saveAs = (format: "png" | "jpg" | "gb7") => {
-    if (!imageData) { alert("Нет изображения для сохранения"); return }
-    if (format === "gb7") saveAsGB7(imageData)
-    else saveImageAs(imageData, format)
-  }
+  const saveAs = (format: 'png' | 'jpg' | 'gb7') => {
+    if (!imageData) {
+      alert('Нет изображения для сохранения');
+      return;
+    }
+    const wrapper: ImageDataWrapper = { data: imageData };
+    handler.save(wrapper, format);
+  };
 
-  return { imageData, openFile, handleFile, saveAs, inputRef }
+  return { imageData, openFile, handleFile, saveAs, inputRef };
 }
