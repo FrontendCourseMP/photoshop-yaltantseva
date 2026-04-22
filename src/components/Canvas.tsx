@@ -3,7 +3,12 @@ import { useRef, useEffect } from 'react';
 interface CanvasProps {
   imageData: ImageData | null;
   tool: string | null;
-  onPixelClick: (info: { x: number, y: number, rgb: [number, number, number], lab: [number, number, number] }) => void;
+  onPixelClick: (info: {
+    x: number;
+    y: number;
+    rgb: [number, number, number];
+    lab: [number, number, number];
+  }) => void;
 }
 
 function drawCheckerboard(
@@ -26,7 +31,9 @@ function drawCheckerboard(
 
 function rgbToLab(r: number, g: number, b: number): [number, number, number] {
   // Normalize RGB to 0-1
-  r /= 255; g /= 255; b /= 255;
+  r /= 255;
+  g /= 255;
+  b /= 255;
 
   // Linearize
   r = r > 0.04045 ? Math.pow((r + 0.055) / 1.055, 2.4) : r / 12.92;
@@ -43,9 +50,9 @@ function rgbToLab(r: number, g: number, b: number): [number, number, number] {
   const yr = y / 1.0;
   const zr = z / 1.08883;
 
-  const fx = xr > 0.008856 ? Math.pow(xr, 1/3) : (7.787 * xr + 16/116);
-  const fy = yr > 0.008856 ? Math.pow(yr, 1/3) : (7.787 * yr + 16/116);
-  const fz = zr > 0.008856 ? Math.pow(zr, 1/3) : (7.787 * zr + 16/116);
+  const fx = xr > 0.008856 ? Math.pow(xr, 1 / 3) : 7.787 * xr + 16 / 116;
+  const fy = yr > 0.008856 ? Math.pow(yr, 1 / 3) : 7.787 * yr + 16 / 116;
+  const fz = zr > 0.008856 ? Math.pow(zr, 1 / 3) : 7.787 * zr + 16 / 116;
 
   const L = 116 * fy - 16;
   const a = 500 * (fx - fy);
@@ -102,6 +109,8 @@ export function Canvas({ imageData, tool, onPixelClick }: CanvasProps) {
 
   const handleClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
     if (tool !== 'pipette' || !imageData || !canvasRef.current) return;
+    e.preventDefault();
+    if (e.button !== 0) return; // Only left mouse button
 
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
@@ -132,11 +141,11 @@ export function Canvas({ imageData, tool, onPixelClick }: CanvasProps) {
   const cursorClass = tool === 'pipette' ? 'cursor-crosshair' : 'cursor-default';
 
   return (
-    <canvas 
-      ref={canvasRef} 
-      className={`max-w-full max-h-full object-contain ${cursorClass}`} 
+    <canvas
+      ref={canvasRef}
+      className={`max-w-full max-h-full object-contain ${cursorClass}`}
       style={{ cursor: getCursor(tool) }}
-      onClick={handleClick}
+      onMouseDown={handleClick}
       onMouseMove={() => {
         if (canvasRef.current && tool === 'pipette') {
           canvasRef.current.style.cursor = 'crosshair';
