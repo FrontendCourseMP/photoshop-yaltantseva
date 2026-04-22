@@ -3,6 +3,7 @@ import { useState, useCallback } from 'react';
 import { Canvas } from './components/Canvas';
 import { StatusBar } from './components/StatusBar';
 import { Toolbar } from './components/Toolbar';
+import { ChannelsPanel } from './components/ChannelsPanel';
 
 function App() {
   const [imageData, setImageData] = useState<ImageData | null>(null);
@@ -13,6 +14,7 @@ function App() {
     rgb: [number, number, number];
     lab: [number, number, number];
   } | null>(null);
+  const [selectedChannels, setSelectedChannels] = useState({ r: true, g: true, b: true, a: true });
 
   const handleImageLoad = useCallback((data: ImageData) => {
     setImageData(data);
@@ -39,13 +41,24 @@ function App() {
         <MenubarDemo onImageLoad={handleImageLoad} />
       </div>
 
-      {/* Основное содержимое: Toolbar + Canvas */}
+      {/* Основное содержимое: Toolbar + Canvas + ChannelsPanel */}
       <div className="flex-1 flex overflow-hidden">
         <Toolbar activeTool={activeTool} onToolSelect={handleToolSelect} />
 
         <main className="flex-1 flex items-center justify-center p-4 overflow-auto">
-          <Canvas imageData={imageData} tool={activeTool} onPixelClick={handlePixelClick} />
+          <Canvas
+            imageData={imageData}
+            tool={activeTool}
+            onPixelClick={handlePixelClick}
+            selectedChannels={selectedChannels}
+          />
         </main>
+
+        <ChannelsPanel
+          imageData={imageData}
+          selectedChannels={selectedChannels}
+          setSelectedChannels={setSelectedChannels}
+        />
       </div>
 
       {/* StatusBar внизу */}
