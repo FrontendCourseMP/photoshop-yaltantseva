@@ -4,10 +4,13 @@ import { Canvas } from './components/Canvas';
 import { StatusBar } from './components/StatusBar';
 import { Toolbar } from './components/Toolbar';
 import { ChannelsPanel } from './components/ChannelsPanel';
+import { getColorDepth } from './lib/imageUtils';
 
 function App() {
   const [imageData, setImageData] = useState<ImageData | null>(null);
   const [activeTool, setActiveTool] = useState('cursor');
+  const [colorDepth, setColorDepth] = useState(0);
+  const [format, setFormat] = useState<string | null>(null);
   const [pixelInfo, setPixelInfo] = useState<{
     x: number;
     y: number;
@@ -16,8 +19,10 @@ function App() {
   } | null>(null);
   const [selectedChannels, setSelectedChannels] = useState({ r: true, g: true, b: true, a: true });
 
-  const handleImageLoad = useCallback((data: ImageData) => {
+  const handleImageLoad = useCallback((data: ImageData, imageFormat?: string) => {
     setImageData(data);
+    setFormat(imageFormat || null);
+    setColorDepth(getColorDepth(data, imageFormat));
     setPixelInfo(null);
   }, []);
 
@@ -62,7 +67,7 @@ function App() {
       </div>
 
       {/* StatusBar внизу */}
-      <StatusBar imageData={imageData} pixelInfo={pixelInfo} />
+      <StatusBar imageData={imageData} colorDepth={colorDepth} pixelInfo={pixelInfo} />
     </div>
   );
 }

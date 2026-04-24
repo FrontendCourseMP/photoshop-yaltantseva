@@ -1,5 +1,5 @@
-import { useEffect } from "react"
-import { useImageFile } from "@/hooks/useImageFile"
+import { useEffect } from 'react';
+import { useImageFile } from '@/hooks/useImageFile';
 import {
   Menubar,
   MenubarCheckboxItem,
@@ -13,14 +13,18 @@ import {
   MenubarSubContent,
   MenubarSubTrigger,
   MenubarTrigger,
-} from "./ui/menubar"
+} from './ui/menubar';
 
-export function MenubarDemo({ onImageLoad }: { onImageLoad: (d: ImageData) => void }) {
-  const { openFile, handleFile, saveAs, inputRef, imageData } = useImageFile()
+export function MenubarDemo({
+  onImageLoad,
+}: {
+  onImageLoad: (d: ImageData, format?: string) => void;
+}) {
+  const { openFile, handleFile, saveAs, inputRef, imageData, format } = useImageFile();
 
   useEffect(() => {
-    if (imageData) onImageLoad(imageData)
-  }, [imageData, onImageLoad])
+    if (imageData) onImageLoad(imageData, format);
+  }, [imageData, format, onImageLoad]);
 
   return (
     <>
@@ -45,9 +49,9 @@ export function MenubarDemo({ onImageLoad }: { onImageLoad: (d: ImageData) => vo
                 <MenubarSubTrigger>Сохранить как...</MenubarSubTrigger>
                 <MenubarSubContent>
                   <MenubarGroup>
-                    <MenubarItem onSelect={() => saveAs("png")}>PNG</MenubarItem>
-                    <MenubarItem onSelect={() => saveAs("jpg")}>JPG</MenubarItem>
-                    <MenubarItem onSelect={() => saveAs("gb7")}>GB7</MenubarItem>
+                    <MenubarItem onSelect={() => saveAs('png')}>PNG</MenubarItem>
+                    <MenubarItem onSelect={() => saveAs('jpg')}>JPG</MenubarItem>
+                    <MenubarItem onSelect={() => saveAs('gb7')}>GB7</MenubarItem>
                   </MenubarGroup>
                 </MenubarSubContent>
               </MenubarSub>
@@ -91,9 +95,7 @@ export function MenubarDemo({ onImageLoad }: { onImageLoad: (d: ImageData) => vo
             </MenubarGroup>
             <MenubarSeparator />
             <MenubarGroup>
-              <MenubarCheckboxItem disabled>
-                Строка состояния
-              </MenubarCheckboxItem>
+              <MenubarCheckboxItem disabled>Строка состояния</MenubarCheckboxItem>
             </MenubarGroup>
           </MenubarContent>
         </MenubarMenu>
@@ -110,5 +112,5 @@ export function MenubarDemo({ onImageLoad }: { onImageLoad: (d: ImageData) => vo
         </MenubarMenu>
       </Menubar>
     </>
-  )
+  );
 }

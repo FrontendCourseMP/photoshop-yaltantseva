@@ -3,6 +3,7 @@ import { DefaultImageHandler, ImageDataWrapper } from '@/lib/imageHandler';
 
 export function useImageFile() {
   const [imageData, setImageData] = useState<ImageData | null>(null);
+  const [format, setFormat] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const handler = new DefaultImageHandler();
 
@@ -15,6 +16,7 @@ export function useImageFile() {
     try {
       const wrapper = await handler.load(file);
       setImageData(wrapper.data);
+      setFormat(wrapper.format || null);
     } catch (err) {
       alert('Ошибка загрузки: ' + (err as Error).message);
     }
@@ -31,5 +33,5 @@ export function useImageFile() {
     handler.save(wrapper, format);
   };
 
-  return { imageData, openFile, handleFile, saveAs, inputRef };
+  return { imageData, format, openFile, handleFile, saveAs, inputRef };
 }
