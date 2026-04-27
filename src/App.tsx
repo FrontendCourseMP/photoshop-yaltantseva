@@ -4,7 +4,7 @@ import { Canvas } from './components/Canvas';
 import { StatusBar } from './components/StatusBar';
 import { Toolbar } from './components/Toolbar';
 import { ChannelsPanel } from './components/ChannelsPanel';
-import { getColorDepth } from './lib/imageUtils';
+import { getColorDepth, getAvailableChannels } from './lib/imageUtils';
 
 function App() {
   const [imageData, setImageData] = useState<ImageData | null>(null);
@@ -17,13 +17,29 @@ function App() {
     rgb: [number, number, number];
     lab: [number, number, number];
   } | null>(null);
-  const [selectedChannels, setSelectedChannels] = useState({ r: true, g: true, b: true, a: true });
+  const [selectedChannels, setSelectedChannels] = useState({
+    r: true,
+    g: true,
+    b: true,
+    a: true,
+    gray: true,
+  });
 
   const handleImageLoad = useCallback((data: ImageData, imageFormat?: string) => {
     setImageData(data);
     setFormat(imageFormat || null);
     setColorDepth(getColorDepth(data, imageFormat));
     setPixelInfo(null);
+
+    // Сбрасываем настройки каналов в зависимости от доступных каналов
+    const availableChannels = getAvailableChannels(data, imageFormat);
+    const newSelectedChannels = { r: false, g: false, b: false, a: false, gray: false };
+
+    availableChannels.forEach((channel) => {
+      newSelectedChannels[channel] = true;
+    });
+
+    setSelectedChannels(newSelectedChannels);
   }, []);
 
   const handlePixelClick = (info: {
@@ -56,11 +72,13 @@ function App() {
             tool={activeTool}
             onPixelClick={handlePixelClick}
             selectedChannels={selectedChannels}
+            format={format}
           />
         </main>
 
         <ChannelsPanel
           imageData={imageData}
+          format={format}
           selectedChannels={selectedChannels}
           setSelectedChannels={setSelectedChannels}
         />

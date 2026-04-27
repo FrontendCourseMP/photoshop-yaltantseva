@@ -50,6 +50,52 @@ export function getColorDepth(imageData: ImageData, format?: string): number {
   return hasTransparency ? 32 : 24;
 }
 
+export function getAvailableChannels(
+  imageData: ImageData,
+  format?: string,
+): ('r' | 'g' | 'b' | 'a' | 'gray')[] {
+  if (format === 'gb7') {
+    // Для GB7 всегда есть серый канал, альфа - опционально
+    const channels: ('r' | 'g' | 'b' | 'a' | 'gray')[] = ['gray'];
+
+    // Проверяем наличие прозрачности
+    let hasTransparency = false;
+    for (let i = 3; i < imageData.data.length; i += 4) {
+      if (imageData.data[i] !== 255) {
+        hasTransparency = true;
+        break;
+      }
+    }
+
+    if (hasTransparency) {
+      channels.push('a');
+    }
+
+    return channels;
+  }
+
+  // Для JPG всегда только RGB (нет прозрачности)
+  if (format === 'jpg' || format === 'jpeg') {
+    return ['r', 'g', 'b'];
+  }
+
+  // Для PNG и других форматов проверяем наличие прозрачности
+  let hasTransparency = false;
+  for (let i = 3; i < imageData.data.length; i += 4) {
+    if (imageData.data[i] !== 255) {
+      hasTransparency = true;
+      break;
+    }
+  }
+
+  const channels: ('r' | 'g' | 'b' | 'a')[] = ['r', 'g', 'b'];
+  if (hasTransparency) {
+    channels.push('a');
+  }
+
+  return channels;
+}
+
 export function saveImageAs(imageData: ImageData, format: 'png' | 'jpg') {
   const canvas = document.createElement('canvas');
   canvas.width = imageData.width;

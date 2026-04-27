@@ -10,7 +10,8 @@ interface CanvasProps {
     rgb: [number, number, number];
     lab: [number, number, number];
   }) => void;
-  selectedChannels: { r: boolean; g: boolean; b: boolean; a: boolean };
+  selectedChannels: { r: boolean; g: boolean; b: boolean; a: boolean; gray: boolean };
+  format: string | null;
 }
 
 function rgbToLab(r: number, g: number, b: number): [number, number, number] {
@@ -57,10 +58,10 @@ const getCursor = (tool: string | null) => {
   }
 };
 
-export function Canvas({ imageData, tool, onPixelClick, selectedChannels }: CanvasProps) {
+export function Canvas({ imageData, tool, onPixelClick, selectedChannels, format }: CanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  useCanvasDrawing(canvasRef, imageData, selectedChannels);
+  useCanvasDrawing(canvasRef, imageData, selectedChannels, format);
 
   useEffect(() => {
     if (!canvasRef.current) return;

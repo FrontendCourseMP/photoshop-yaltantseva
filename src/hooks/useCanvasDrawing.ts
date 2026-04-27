@@ -20,19 +20,31 @@ function drawCheckerboard(
 
 function applyChannelSelection(
   imageData: ImageData,
-  selectedChannels: { r: boolean; g: boolean; b: boolean; a: boolean },
+  selectedChannels: { r: boolean; g: boolean; b: boolean; a: boolean; gray: boolean },
+  format: string | null,
 ): ImageData {
   // СОЗДАЕМ НОВЫЙ МАССИВ, не изменяем оригинал!
   const modified = new ImageData(imageData.width, imageData.height);
   const origData = imageData.data;
   const modData = modified.data;
 
+  const isGB7 = format === 'gb7';
+
   for (let i = 0; i < origData.length; i += 4) {
-    // Если канал выключен - ставим 0, иначе оставляем оригинальное значение
-    modData[i] = selectedChannels.r ? origData[i] : 0;     // R
-    modData[i + 1] = selectedChannels.g ? origData[i + 1] : 0; // G
-    modData[i + 2] = selectedChannels.b ? origData[i + 2] : 0; // B
-    modData[i + 3] = selectedChannels.a ? origData[i + 3] : 255; // A (если выключен - делаем непрозрачным)
+    if (isGB7) {
+      // Для GB7: если gray выключен - все RGB = 0, иначе оставляем оригинальные значения
+      const grayValue = selectedChannels.gray ? origData[i] : 0;
+      modData[i] = grayValue; // R
+      modData[i + 1] = grayValue; // G
+      modData[i + 2] = grayValue; // B
+      modData[i + 3] = selectedChannels.a ? origData[i + 3] : 255; // A
+    } else {
+      // Для обычных изображений: применяем RGB каналы отдельно
+      modData[i] = selectedChannels.r ? origData[i] : 0; // R
+      modData[i + 1] = selectedChannels.g ? origData[i + 1] : 0; // G
+      modData[i + 2] = selectedChannels.b ? origData[i + 2] : 0; // B
+      modData[i + 3] = selectedChannels.a ? origData[i + 3] : 255; // A
+    }
   }
 
   return modified;
@@ -41,7 +53,8 @@ function applyChannelSelection(
 export function useCanvasDrawing(
   canvasRef: RefObject<HTMLCanvasElement>,
   imageData: ImageData | null,
-  selectedChannels: { r: boolean; g: boolean; b: boolean; a: boolean },
+  selectedChannels: { r: boolean; g: boolean; b: boolean; a: boolean; gray: boolean },
+  format: string | null,
 ) {
   useEffect(() => {
     if (!canvasRef.current || !imageData) return;
@@ -58,7 +71,7 @@ export function useCanvasDrawing(
     drawCheckerboard(ctx, imageData.width, imageData.height);
 
     // Применяем выбранные каналы к изображению (создаем НОВЫЙ ImageData)
-    const modifiedImageData = applyChannelSelection(imageData, selectedChannels);
+    const modifiedImageData = applyChannelSelection(imageData, selectedChannels, format);
 
     // Создаем временный canvas для изображения
     const tempCanvas = document.createElement('canvas');
@@ -70,5 +83,5 @@ export function useCanvasDrawing(
       // Рисуем изображение поверх шахматки с учетом прозрачности
       ctx.drawImage(tempCanvas, 0, 0);
     }
-  }, [canvasRef, imageData, selectedChannels]);
+  }, [canvasRef, imageData, selectedChannels, format]);
 }
