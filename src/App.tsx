@@ -4,6 +4,7 @@ import { Canvas } from './components/Canvas';
 import { StatusBar } from './components/StatusBar';
 import { Toolbar } from './components/Toolbar';
 import { ChannelsPanel } from './components/ChannelsPanel';
+import { LevelsDialog } from './components/LevelsDialog';
 import { getColorDepth, getAvailableChannels } from './lib/imageUtils';
 
 function App() {
@@ -24,6 +25,7 @@ function App() {
     a: true,
     gray: true,
   });
+  const [isLevelsOpen, setIsLevelsOpen] = useState(false);
 
   const handleImageLoad = useCallback((data: ImageData, imageFormat?: string) => {
     setImageData(data);
@@ -59,7 +61,7 @@ function App() {
     <div className="w-full min-h-screen flex flex-col">
       {/* Menubar вверху */}
       <div className="border-b p-2">
-        <MenubarDemo onImageLoad={handleImageLoad} />
+        <MenubarDemo onImageLoad={handleImageLoad} onOpenLevels={() => setIsLevelsOpen(true)} />
       </div>
 
       {/* Основное содержимое: Toolbar + Canvas + ChannelsPanel */}
@@ -86,6 +88,12 @@ function App() {
 
       {/* StatusBar внизу */}
       <StatusBar imageData={imageData} colorDepth={colorDepth} pixelInfo={pixelInfo} />
+
+      <LevelsDialog
+        isOpen={isLevelsOpen}
+        onClose={() => setIsLevelsOpen(false)}
+        imageData={imageData}
+      />
     </div>
   );
 }

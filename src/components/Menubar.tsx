@@ -17,8 +17,10 @@ import {
 
 export function MenubarDemo({
   onImageLoad,
+  onOpenLevels,
 }: {
   onImageLoad: (d: ImageData, format?: string) => void;
+  onOpenLevels: () => void;
 }) {
   const { openFile, handleFile, saveAs, inputRef, imageData, format } = useImageFile();
 
@@ -42,7 +44,7 @@ export function MenubarDemo({
           <MenubarContent>
             <MenubarGroup>
               <MenubarItem onSelect={openFile}>
-                Открыть... <MenubarShortcut>⌘O</MenubarShortcut>
+                Открыть... <MenubarShortcut>^O</MenubarShortcut>
               </MenubarItem>
               <MenubarSeparator />
               <MenubarSub>
@@ -75,6 +77,17 @@ export function MenubarDemo({
               <MenubarItem disabled>Вырезать</MenubarItem>
               <MenubarItem disabled>Копировать</MenubarItem>
               <MenubarItem disabled>Вставить</MenubarItem>
+            </MenubarGroup>
+          </MenubarContent>
+        </MenubarMenu>
+
+        <MenubarMenu>
+          <MenubarTrigger>Изображение</MenubarTrigger>
+          <MenubarContent>
+            <MenubarGroup>
+              <MenubarItem onSelect={onOpenLevels}>
+                Уровни... <MenubarShortcut>⌃L</MenubarShortcut>
+              </MenubarItem>
             </MenubarGroup>
           </MenubarContent>
         </MenubarMenu>
