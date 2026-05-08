@@ -45,7 +45,20 @@ function ChannelItem({
     canvas.width = width;
     canvas.height = height;
 
-    // Создаем ImageData для миниатюры
+    // Рисуем шахматную доску как фон (будет видна в прозрачных областях)
+    const lightColor = '#e0e0e0';
+    const darkColor = '#a0a0a0';
+    const cellSize = 8;
+    ctx.clearRect(0, 0, width, height);
+    for (let y = 0; y < height; y += cellSize) {
+      for (let x = 0; x < width; x += cellSize) {
+        const isLight = (Math.floor(x / cellSize) + Math.floor(y / cellSize)) % 2 === 0;
+        ctx.fillStyle = isLight ? lightColor : darkColor;
+        ctx.fillRect(x, y, Math.min(cellSize, width - x), Math.min(cellSize, height - y));
+      }
+    }
+
+    // Создаем ImageData: белый цвет с альфа-прозрачностью из исходника
     const preview = new ImageData(width, height);
     const pData = preview.data;
     const origData = imageData.data;
@@ -59,12 +72,12 @@ function ChannelItem({
         const dstIdx = (y * width + x) * 4;
 
         if (channel === 'a') {
-          // Альфа-канал: градации серого (белый = непрозрачный, чёрный = прозрачный)
+          // Белый цвет с реальной прозрачностью
           const alpha = origData[srcIdx + 3];
-          pData[dstIdx] = alpha;     // R
-          pData[dstIdx + 1] = alpha; // G
-          pData[dstIdx + 2] = alpha; // B
-          pData[dstIdx + 3] = 255;   // Непрозрачный
+          pData[dstIdx] = 255;     // R - белый
+          pData[dstIdx + 1] = 255; // G - белый
+          pData[dstIdx + 2] = 255; // B - белый
+          pData[dstIdx + 3] = alpha; // A - реальная прозрачность
         } else {
           // RGB каналы
           let value = 0;
@@ -84,7 +97,15 @@ function ChannelItem({
       }
     }
 
-    ctx.putImageData(preview, 0, 0);
+    // Используем временный canvas + drawImage для корректного композитинга с прозрачностью
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = width;
+    tempCanvas.height = height;
+    const tempCtx = tempCanvas.getContext('2d');
+    if (tempCtx) {
+      tempCtx.putImageData(preview, 0, 0);
+      ctx.drawImage(tempCanvas, 0, 0);
+    }
   }, [imageData, channel]);
 
   // Определяем цвет рамки в зависимости от канала
