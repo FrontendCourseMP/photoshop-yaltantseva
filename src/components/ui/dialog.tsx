@@ -9,6 +9,7 @@ interface DialogContentProps extends React.ComponentProps<typeof DialogPrimitive
   showCloseButton?: boolean;
   draggable?: boolean;
   disableOutsideClose?: boolean;
+  overlayClassName?: string;
 }
 
 function Dialog({ ...props }: React.ComponentProps<typeof DialogPrimitive.Root>) {
@@ -49,6 +50,7 @@ function DialogContent({
   showCloseButton = true,
   draggable = false,
   disableOutsideClose = false,
+  overlayClassName,
   ...props
 }: DialogContentProps & { disableOutsideClose?: boolean }) {
   const [position, setPosition] = React.useState({ x: 0, y: 0 });
@@ -56,15 +58,20 @@ function DialogContent({
   const dragStart = React.useRef({ x: 0, y: 0 });
   const contentRef = React.useRef<HTMLDivElement>(null);
 
-  const handleMouseDown = (e: React.MouseEvent) => {
-    if (!draggable) return;
-    if ((e.target as HTMLElement).closest('[data-slot="dialog-close"]')) return;
-    setIsDragging(true);
-    dragStart.current = {
-      x: e.clientX - position.x,
-      y: e.clientY - position.y,
-    };
+const handleMouseDown = (e: React.MouseEvent) => {
+  if (!draggable) return;
+  const target = e.target as HTMLElement;
+  if (target.closest('[data-slot="dialog-close"]')) return;
+  // Исключаем интерактивные элементы из перетаскивания
+  if (target.closest('input, select, textarea, button, [role="slider"], [role="combobox"]')) {
+    return;
+  }
+  setIsDragging(true);
+  dragStart.current = {
+    x: e.clientX - position.x,
+    y: e.clientY - position.y,
   };
+};
 
   const handleMouseMove = React.useCallback((e: MouseEvent) => {
     if (!isDragging) return;
@@ -91,7 +98,7 @@ function DialogContent({
 
   return (
     <DialogPortal>
-      <DialogOverlay />
+      <DialogOverlay className={overlayClassName} />
       <DialogPrimitive.Content
         ref={contentRef}
         data-slot="dialog-content"

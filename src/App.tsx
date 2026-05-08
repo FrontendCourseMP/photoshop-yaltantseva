@@ -101,9 +101,9 @@ function App() {
     : imageData;
 
   return (
-    <div className="w-full min-h-screen flex flex-col">
+    <div className="w-full h-screen flex flex-col">
       {/* Menubar вверху */}
-      <div className="border-b p-2">
+      <div className="border-b p-2 shrink-0">
         <MenubarDemo onImageLoad={handleImageLoad} onOpenLevels={handleOpenLevels} />
       </div>
 
@@ -111,7 +111,7 @@ function App() {
       <div className="flex-1 flex overflow-hidden">
         <Toolbar activeTool={activeTool} onToolSelect={handleToolSelect} />
 
-        <main className="flex-1 flex items-center justify-center p-4 overflow-auto">
+        <main className="flex-1 overflow-auto flex items-center justify-center p-4">
           <Canvas
             imageData={displayedImageData}
             tool={activeTool}
@@ -130,7 +130,9 @@ function App() {
       </div>
 
       {/* StatusBar внизу */}
-      <StatusBar imageData={imageData} colorDepth={colorDepth} pixelInfo={pixelInfo} />
+      <div className="shrink-0">
+        <StatusBar imageData={imageData} colorDepth={colorDepth} pixelInfo={pixelInfo} />
+      </div>
 
       <LevelsDialog
         isOpen={isLevelsOpen}

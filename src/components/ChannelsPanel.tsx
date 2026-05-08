@@ -14,49 +14,6 @@ interface ChannelsPanelProps {
   }) => void;
 }
 
-// Создание превью для отдельного канала
-function createChannelPreview(imageData: ImageData, channel: 'r' | 'g' | 'b' | 'a'): ImageData {
-  const preview = new ImageData(imageData.width, imageData.height);
-  const pixels = preview.data;
-  const origPixels = imageData.data;
-
-  for (let i = 0; i < origPixels.length; i += 4) {
-    let value = 0;
-
-    // Получаем значение канала
-    if (channel === 'r') value = origPixels[i];
-    else if (channel === 'g') value = origPixels[i + 1];
-    else if (channel === 'b') value = origPixels[i + 2];
-    else if (channel === 'a') value = origPixels[i + 3];
-
-    if (channel === 'a') {
-      // Альфа-канал показываем в градациях серого
-      pixels[i] = value; // R
-      pixels[i + 1] = value; // G
-      pixels[i + 2] = value; // B
-      pixels[i + 3] = 255; // A - непрозрачный фон
-    } else {
-      // RGB каналы показываем в соответствующем цвете
-      if (channel === 'r') {
-        pixels[i] = value; // R
-        pixels[i + 1] = 0; // G
-        pixels[i + 2] = 0; // B
-      } else if (channel === 'g') {
-        pixels[i] = 0; // R
-        pixels[i + 1] = value; // G
-        pixels[i + 2] = 0; // B
-      } else if (channel === 'b') {
-        pixels[i] = 0; // R
-        pixels[i + 1] = 0; // G
-        pixels[i + 2] = value; // B
-      }
-      pixels[i + 3] = 255; // Непрозрачный фон
-    }
-  }
-
-  return preview;
-}
-
 function ChannelItem({
   label,
   channel,
@@ -80,10 +37,6 @@ function ChannelItem({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Создаем превью для канала
-    const preview = createChannelPreview(imageData, channel);
-
-    // Фиксированный размер миниатюры 64x64 с сохранением пропорций
     const maxSize = 64;
     const scale = Math.min(maxSize / imageData.width, maxSize / imageData.height);
     const width = Math.floor(imageData.width * scale);
@@ -92,23 +45,46 @@ function ChannelItem({
     canvas.width = width;
     canvas.height = height;
 
-    // Очищаем canvas
-    ctx.clearRect(0, 0, width, height);
+    // Создаем ImageData для миниатюры
+    const preview = new ImageData(width, height);
+    const pData = preview.data;
+    const origData = imageData.data;
+    const origW = imageData.width;
 
-    // Для альфа-канала рисуем шахматную доску (фон)
-    if (channel === 'a') {
-      drawCheckerboard(ctx, width, height);
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        const srcX = Math.floor(x / scale);
+        const srcY = Math.floor(y / scale);
+        const srcIdx = (srcY * origW + srcX) * 4;
+        const dstIdx = (y * width + x) * 4;
+
+        if (channel === 'a') {
+          // Альфа-канал: градации серого (белый = непрозрачный, чёрный = прозрачный)
+          const alpha = origData[srcIdx + 3];
+          pData[dstIdx] = alpha;     // R
+          pData[dstIdx + 1] = alpha; // G
+          pData[dstIdx + 2] = alpha; // B
+          pData[dstIdx + 3] = 255;   // Непрозрачный
+        } else {
+          // RGB каналы
+          let value = 0;
+          if (channel === 'r') value = origData[srcIdx];
+          else if (channel === 'g') value = origData[srcIdx + 1];
+          else if (channel === 'b') value = origData[srcIdx + 2];
+
+          if (channel === 'r') {
+            pData[dstIdx] = value; pData[dstIdx + 1] = 0; pData[dstIdx + 2] = 0;
+          } else if (channel === 'g') {
+            pData[dstIdx] = 0; pData[dstIdx + 1] = value; pData[dstIdx + 2] = 0;
+          } else if (channel === 'b') {
+            pData[dstIdx] = 0; pData[dstIdx + 1] = 0; pData[dstIdx + 2] = value;
+          }
+          pData[dstIdx + 3] = 255;
+        }
+      }
     }
 
-    // Рисуем превью
-    const tempCanvas = document.createElement('canvas');
-    tempCanvas.width = imageData.width;
-    tempCanvas.height = imageData.height;
-    const tempCtx = tempCanvas.getContext('2d');
-    if (tempCtx) {
-      tempCtx.putImageData(preview, 0, 0);
-      ctx.drawImage(tempCanvas, 0, 0, width, height);
-    }
+    ctx.putImageData(preview, 0, 0);
   }, [imageData, channel]);
 
   // Определяем цвет рамки в зависимости от канала
@@ -151,35 +127,17 @@ function ChannelItem({
       onClick={onToggle}
     >
       <div className={`text-xs font-medium mb-1 ${getTextColor()}`}>{label}</div>
-      <canvas
-        ref={canvasRef}
-        className="w-full rounded"
-        style={{ aspectRatio: `${imageData?.width || 1}/${imageData?.height || 1}` }}
-      />
+      <div className="flex justify-center">
+        <canvas
+          ref={canvasRef}
+          className="rounded"
+        />
+      </div>
       <div className="text-xs text-center mt-1 text-white/40">
         {isSelected ? '✓ Включен' : '✗ Выключен'}
       </div>
     </div>
   );
-}
-
-// Функция для рисования шахматной доски (для альфа-канала)
-function drawCheckerboard(
-  ctx: CanvasRenderingContext2D,
-  width: number,
-  height: number,
-  cellSize: number = 8,
-) {
-  const lightColor = '#e0e0e0';
-  const darkColor = '#a0a0a0';
-
-  for (let y = 0; y < height; y += cellSize) {
-    for (let x = 0; x < width; x += cellSize) {
-      const isLight = (Math.floor(x / cellSize) + Math.floor(y / cellSize)) % 2 === 0;
-      ctx.fillStyle = isLight ? lightColor : darkColor;
-      ctx.fillRect(x, y, Math.min(cellSize, width - x), Math.min(cellSize, height - y));
-    }
-  }
 }
 
 export function ChannelsPanel({
@@ -224,21 +182,19 @@ export function ChannelsPanel({
           Нажмите на миниатюру, чтобы включить/выключить канал
         </p>
 
-        <div
-          className={`grid gap-3 ${availableChannels.length === 2 ? 'grid-cols-1' : 'grid-cols-2'}`}
-        >
+        <div className="grid grid-cols-1 gap-3">
           {availableChannels.map((channel) => (
-            <ChannelItem
-              key={channel}
-              label={getChannelLabel(channel)}
-              channel={channel}
-              imageData={imageData}
-              format={format}
-              isSelected={selectedChannels[channel]}
-              onToggle={() => toggleChannel(channel)}
-            />
-          ))}
-        </div>
+             <ChannelItem
+               key={channel}
+               label={getChannelLabel(channel)}
+               channel={channel}
+               imageData={imageData}
+               format={format}
+               isSelected={selectedChannels[channel]}
+               onToggle={() => toggleChannel(channel)}
+             />
+           ))}
+         </div>
       </div>
     </div>
   );

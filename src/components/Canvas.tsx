@@ -104,7 +104,7 @@ export function Canvas({ imageData, tool, onPixelClick, selectedChannels, format
   return (
     <canvas
       ref={canvasRef}
-      className={`max-w-full max-h-full object-contain ${cursorClass}`}
+      className={cursorClass}
       style={{ cursor: getCursor(tool) }}
       onMouseDown={handleClick}
       onMouseMove={() => {

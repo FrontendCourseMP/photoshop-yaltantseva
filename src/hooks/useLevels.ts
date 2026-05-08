@@ -14,25 +14,50 @@ export function useLevels(
   const [selectedChannel, setSelectedChannel] = useState<Channel>('master');
   const [levels, setLevels] = useState(defaultLevels);
   const [isLogScale, setIsLogScale] = useState(false);
+  const [hasAlpha, setHasAlpha] = useState(false);
+  const [isGrayscale, setIsGrayscale] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const currentLevels = levels[selectedChannel];
 
   useEffect(() => {
     if (!isOpen) return;
-    setSelectedChannel('master');
     setLevels(defaultLevels);
     setIsLogScale(false);
     if (imageData) {
+      const data = imageData.data;
+      // Проверяем наличие альфа-канала (есть ли пиксели с alpha < 255)
+      let alphaPresent = false;
+      // Проверяем, является ли изображение градационным (R == G == B для всех пикселей)
+      let grayscale = true;
+      for (let i = 0; i < data.length; i += 4) {
+        if (data[i] !== data[i + 1] || data[i] !== data[i + 2]) {
+          grayscale = false;
+          // Если уже нашли цветной пиксель и есть альфа, можно выйти
+        }
+        if (!alphaPresent && data[i + 3] < 255) {
+          alphaPresent = true;
+        }
+        if (!grayscale && alphaPresent) break; // Оптимизация - выходим, если уже всё понятно
+      }
+      setHasAlpha(alphaPresent);
+      setIsGrayscale(grayscale);
+      setSelectedChannel('master');
       onPreview(imageData);
       onPreviewToggle(true);
     }
   }, [isOpen, imageData, onPreview, onPreviewToggle]);
 
   useEffect(() => {
-    if (!isOpen || !imageData || !canvasRef.current) return;
-    const histogram = computeHistogram(imageData, selectedChannel);
-    drawHistogram(canvasRef.current, histogram, isLogScale);
+    if (!isOpen || !imageData) return;
+
+    const raf = requestAnimationFrame(() => {
+      if (!canvasRef.current) return;
+      const histogram = computeHistogram(imageData, selectedChannel);
+      drawHistogram(canvasRef.current, histogram, isLogScale);
+    });
+
+    return () => cancelAnimationFrame(raf);
   }, [isOpen, imageData, selectedChannel, isLogScale]);
 
   useEffect(() => {
@@ -96,6 +121,8 @@ export function useLevels(
     currentLevels,
     isLogScale,
     setIsLogScale,
+    hasAlpha,
+    isGrayscale,
     canvasRef,
     updateLevel,
     handlePreviewToggle,

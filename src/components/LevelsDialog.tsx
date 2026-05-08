@@ -37,6 +37,8 @@ export function LevelsDialog({
     currentLevels,
     isLogScale,
     setIsLogScale,
+    hasAlpha,
+    isGrayscale,
     canvasRef,
     updateLevel,
     handlePreviewToggle,
@@ -46,7 +48,7 @@ export function LevelsDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent draggable disableOutsideClose className="sm:max-w-md bg-[hsl(220,10%,26%)] border-0 text-white">
+      <DialogContent draggable disableOutsideClose overlayClassName="bg-transparent" className="sm:max-w-md bg-[hsl(220,10%,26%)] border-0 text-white">
         <DialogHeader>
           <DialogTitle className="text-white">Уровни</DialogTitle>
         </DialogHeader>
@@ -73,30 +75,36 @@ export function LevelsDialog({
               >
                 Master
               </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => setSelectedChannel('r')}
-                className="relative flex cursor-default items-center gap-2.5 rounded-none px-3 py-2 text-sm font-medium text-white outline-none select-none focus:bg-white/10"
-              >
-                Red
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => setSelectedChannel('g')}
-                className="relative flex cursor-default items-center gap-2.5 rounded-none px-3 py-2 text-sm font-medium text-white outline-none select-none focus:bg-white/10"
-              >
-                Green
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => setSelectedChannel('b')}
-                className="relative flex cursor-default items-center gap-2.5 rounded-none px-3 py-2 text-sm font-medium text-white outline-none select-none focus:bg-white/10"
-              >
-                Blue
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => setSelectedChannel('a')}
-                className="relative flex cursor-default items-center gap-2.5 rounded-none px-3 py-2 text-sm font-medium text-white outline-none select-none focus:bg-white/10"
-              >
-                Alpha
-              </DropdownMenuItem>
+              {!isGrayscale && (
+                <>
+                  <DropdownMenuItem
+                    onClick={() => setSelectedChannel('r')}
+                    className="relative flex cursor-default items-center gap-2.5 rounded-none px-3 py-2 text-sm font-medium text-white outline-none select-none focus:bg-white/10"
+                  >
+                    Red
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => setSelectedChannel('g')}
+                    className="relative flex cursor-default items-center gap-2.5 rounded-none px-3 py-2 text-sm font-medium text-white outline-none select-none focus:bg-white/10"
+                  >
+                    Green
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => setSelectedChannel('b')}
+                    className="relative flex cursor-default items-center gap-2.5 rounded-none px-3 py-2 text-sm font-medium text-white outline-none select-none focus:bg-white/10"
+                  >
+                    Blue
+                  </DropdownMenuItem>
+                </>
+              )}
+              {hasAlpha && (
+                <DropdownMenuItem
+                  onClick={() => setSelectedChannel('a')}
+                  className="relative flex cursor-default items-center gap-2.5 rounded-none px-3 py-2 text-sm font-medium text-white outline-none select-none focus:bg-white/10"
+                >
+                  Alpha
+                </DropdownMenuItem>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
