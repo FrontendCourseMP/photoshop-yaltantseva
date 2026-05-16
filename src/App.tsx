@@ -112,8 +112,8 @@ function App() {
       return;
     }
 
-    const targetWidth = Math.max(1, Math.round(sourceImageData.width * scale / 100));
-    const targetHeight = Math.max(1, Math.round(sourceImageData.height * scale / 100));
+    const targetWidth = Math.max(1, Math.round((sourceImageData.width * scale) / 100));
+    const targetHeight = Math.max(1, Math.round((sourceImageData.height * scale) / 100));
 
     if (targetWidth === sourceImageData.width && targetHeight === sourceImageData.height) {
       setScaledImageData(sourceImageData);

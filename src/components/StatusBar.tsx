@@ -11,7 +11,13 @@ interface StatusBarProps {
   onScaleChange: (scale: number) => void;
 }
 
-export function StatusBar({ imageData, colorDepth, pixelInfo, scale, onScaleChange }: StatusBarProps) {
+export function StatusBar({
+  imageData,
+  colorDepth,
+  pixelInfo,
+  scale,
+  onScaleChange,
+}: StatusBarProps) {
   if (!imageData) {
     return (
       <footer className="h-6 px-4 flex items-center text-xs text-white/30 bg-[hsl(220,10%,20%)]">
