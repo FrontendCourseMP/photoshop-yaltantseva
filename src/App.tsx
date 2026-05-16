@@ -1,11 +1,12 @@
 import { MenubarDemo } from './components/Menubar';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Canvas } from './components/Canvas';
 import { StatusBar } from './components/StatusBar';
 import { Toolbar } from './components/Toolbar';
 import { ChannelsPanel } from './components/ChannelsPanel';
 import { LevelsDialog } from './components/LevelsDialog';
 import { getColorDepth, getAvailableChannels } from './lib/imageUtils';
+import { resizeImageData } from './lib/interpolation';
 
 function App() {
   const [imageData, setImageData] = useState<ImageData | null>(null);
@@ -29,6 +30,9 @@ function App() {
     gray: true,
   });
   const [isLevelsOpen, setIsLevelsOpen] = useState(false);
+  const [scale, setScale] = useState(100);
+  const [autoScaleEnabled, setAutoScaleEnabled] = useState(true);
+  const [scaledImageData, setScaledImageData] = useState<ImageData | null>(null);
 
   const handleImageLoad = useCallback((data: ImageData, imageFormat?: string) => {
     setImageData(data);
@@ -48,6 +52,8 @@ function App() {
     });
 
     setSelectedChannels(newSelectedChannels);
+    setScale(100);
+    setAutoScaleEnabled(true);
   }, []);
 
   const handlePixelClick = (info: {
@@ -94,11 +100,42 @@ function App() {
     setIsLevelsOpen(false);
   }, []);
 
-  const displayedImageData = isLevelsOpen
+  const sourceImageData = isLevelsOpen
     ? levelsPreviewEnabled
       ? (previewImageData ?? imageData)
       : (originalImageData ?? imageData)
     : imageData;
+
+  useEffect(() => {
+    if (!sourceImageData) {
+      setScaledImageData(null);
+      return;
+    }
+
+    const targetWidth = Math.max(1, Math.round(sourceImageData.width * scale / 100));
+    const targetHeight = Math.max(1, Math.round(sourceImageData.height * scale / 100));
+
+    if (targetWidth === sourceImageData.width && targetHeight === sourceImageData.height) {
+      setScaledImageData(sourceImageData);
+      return;
+    }
+
+    setScaledImageData(resizeImageData(sourceImageData, targetWidth, targetHeight));
+  }, [sourceImageData, scale]);
+
+  useEffect(() => {
+    if (!imageData || !autoScaleEnabled) return;
+
+    const margin = 50;
+    const availableWidth = window.innerWidth - margin * 2;
+    const availableHeight = window.innerHeight - margin * 2 - 120;
+    const widthScale = (availableWidth / imageData.width) * 100;
+    const heightScale = (availableHeight / imageData.height) * 100;
+    const fitScale = Math.min(widthScale, heightScale, 300);
+    const initialScale = Math.max(12, Math.min(fitScale, 300));
+
+    setScale(Math.round(initialScale));
+  }, [imageData, autoScaleEnabled]);
 
   return (
     <div className="w-full h-screen flex flex-col">
@@ -113,7 +150,7 @@ function App() {
 
         <main className="flex-1 overflow-auto flex items-center justify-center p-4">
           <Canvas
-            imageData={displayedImageData}
+            imageData={scaledImageData}
             tool={activeTool}
             onPixelClick={handlePixelClick}
             selectedChannels={selectedChannels}
@@ -131,7 +168,16 @@ function App() {
 
       {/* StatusBar внизу */}
       <div className="shrink-0">
-        <StatusBar imageData={imageData} colorDepth={colorDepth} pixelInfo={pixelInfo} />
+        <StatusBar
+          imageData={imageData}
+          colorDepth={colorDepth}
+          pixelInfo={pixelInfo}
+          scale={scale}
+          onScaleChange={(value) => {
+            setScale(value);
+            setAutoScaleEnabled(false);
+          }}
+        />
       </div>
 
       <LevelsDialog
