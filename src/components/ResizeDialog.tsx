@@ -34,9 +34,8 @@ export function ResizeDialog({ isOpen, onClose, imageData, onApply }: ResizeDial
     [originalWidth, originalHeight],
   );
   const [unit, setUnit] = useState<ResizeUnit>('percent');
-  const [percent, setPercent] = useState(100);
-  const [pixelWidth, setPixelWidth] = useState(originalWidth);
-  const [pixelHeight, setPixelHeight] = useState(originalHeight);
+  const [widthValue, setWidthValue] = useState(100);
+  const [heightValue, setHeightValue] = useState(100);
   const [keepAspect, setKeepAspect] = useState(true);
   const [interpolation, setInterpolation] = useState<InterpolationMethod>('bilinear');
   const [validationError, setValidationError] = useState<string | null>(null);
@@ -45,9 +44,8 @@ export function ResizeDialog({ isOpen, onClose, imageData, onApply }: ResizeDial
     if (!imageData) return;
 
     setUnit('percent');
-    setPercent(100);
-    setPixelWidth(originalWidth);
-    setPixelHeight(originalHeight);
+    setWidthValue(100);
+    setHeightValue(100);
     setKeepAspect(true);
     setValidationError(null);
   }, [imageData, isOpen, originalWidth, originalHeight]);
@@ -58,43 +56,65 @@ export function ResizeDialog({ isOpen, onClose, imageData, onApply }: ResizeDial
     }
 
     if (unit === 'percent') {
-      const width = Math.max(1, Math.round((originalWidth * percent) / 100));
-      const height = Math.max(1, Math.round((originalHeight * percent) / 100));
-      return { width, height };
+      return {
+        width: Math.max(1, Math.round((originalWidth * widthValue) / 100)),
+        height: Math.max(1, Math.round((originalHeight * heightValue) / 100)),
+      };
     }
 
     return {
-      width: Math.max(1, pixelWidth),
-      height: Math.max(1, pixelHeight),
+      width: Math.max(1, widthValue),
+      height: Math.max(1, heightValue),
     };
-  }, [imageData, unit, percent, originalWidth, originalHeight, pixelWidth, pixelHeight]);
+  }, [imageData, unit, widthValue, heightValue, originalWidth, originalHeight]);
 
-  const megapixels = useMemo(() => {
-    return ((targetDimensions.width * targetDimensions.height) / 1_000_000).toFixed(2);
-  }, [targetDimensions.height, targetDimensions.width]);
+  const megapixels = useMemo(
+    () => ((targetDimensions.width * targetDimensions.height) / 1_000_000).toFixed(2),
+    [targetDimensions.width, targetDimensions.height],
+  );
 
-  const handlePercentChange = (value: number) => {
-    setPercent(clamp(value, 12, 300));
+  const handleUnitChange = (newUnit: ResizeUnit) => {
+    if (newUnit === unit) return;
+
+    if (newUnit === 'pixels') {
+      setWidthValue(Math.max(1, Math.round((originalWidth * widthValue) / 100)));
+      setHeightValue(Math.max(1, Math.round((originalHeight * heightValue) / 100)));
+    } else {
+      if (originalWidth > 0 && originalHeight > 0) {
+        setWidthValue(Math.max(1, Math.round((widthValue / originalWidth) * 100)));
+        setHeightValue(Math.max(1, Math.round((heightValue / originalHeight) * 100)));
+      }
+    }
+
+    setUnit(newUnit);
     setValidationError(null);
   };
 
-  const handlePixelWidthChange = (value: number) => {
-    const width = Math.max(1, value);
-    setPixelWidth(width);
+  const handleWidthChange = (value: number) => {
+    const clamped = unit === 'percent' ? clamp(value, 1, 1000) : Math.max(1, value);
 
-    if (keepAspect && originalWidth > 0) {
-      setPixelHeight(Math.max(1, Math.round((width * originalHeight) / originalWidth)));
+    setWidthValue(clamped);
+    if (keepAspect) {
+      if (unit === 'percent') {
+        setHeightValue(clamp(clamped, 1, 1000));
+      } else {
+        setHeightValue(Math.max(1, Math.round((clamped * originalHeight) / originalWidth)));
+      }
     }
 
     setValidationError(null);
   };
 
-  const handlePixelHeightChange = (value: number) => {
-    const height = Math.max(1, value);
-    setPixelHeight(height);
+  const handleHeightChange = (value: number) => {
+    const clamped = unit === 'percent' ? clamp(value, 1, 1000) : Math.max(1, value);
 
-    if (keepAspect && originalHeight > 0) {
-      setPixelWidth(Math.max(1, Math.round((height * originalWidth) / originalHeight)));
+    setHeightValue(clamped);
+    if (keepAspect) {
+      if (unit === 'percent') {
+        setWidthValue(clamp(clamped, 1, 1000));
+      } else {
+        setWidthValue(Math.max(1, Math.round((clamped * originalWidth) / originalHeight)));
+      }
     }
 
     setValidationError(null);
@@ -102,15 +122,12 @@ export function ResizeDialog({ isOpen, onClose, imageData, onApply }: ResizeDial
 
   const validateDimensions = () => {
     if (!imageData) return 'Нет исходного изображения.';
-    if (unit === 'percent' && (percent < 12 || percent > 300)) {
-      return 'Процент масштабирования должен быть в диапазоне 12–300%.';
-    }
 
     if (unit === 'pixels') {
-      if (pixelWidth < 1 || pixelHeight < 1) {
+      if (widthValue < 1 || heightValue < 1) {
         return 'Ширина и высота должны быть больше нуля.';
       }
-      if (pixelWidth > 10000 || pixelHeight > 10000) {
+      if (widthValue > 10000 || heightValue > 10000) {
         return 'Ширина и высота не должны превышать 10000 px.';
       }
     }
@@ -124,21 +141,12 @@ export function ResizeDialog({ isOpen, onClose, imageData, onApply }: ResizeDial
 
   const handleApply = () => {
     const error = validateDimensions();
+
     if (error) {
       setValidationError(error);
       return;
     }
     if (!imageData) return;
-
-    if (unit === 'percent' && (percent < 12 || percent > 300)) {
-      setValidationError('Процент масштабирования должен быть в диапазоне 12–300%.');
-      return;
-    }
-
-    if (targetDimensions.width < 1 || targetDimensions.height < 1) {
-      setValidationError('Ширина и высота должны быть больше нуля.');
-      return;
-    }
 
     const resized = resizeImageData(
       imageData,
@@ -157,84 +165,58 @@ export function ResizeDialog({ isOpen, onClose, imageData, onApply }: ResizeDial
       >
         <DialogHeader>
           <DialogTitle className="text-white">Изменить размер изображения</DialogTitle>
-          <DialogDescription className="text-white/60">
-            Укажите размеры в процентах или пикселях, выберите интерполяцию и примените изменения.
-          </DialogDescription>
         </DialogHeader>
 
         <div className="grid gap-4">
           <div className="grid gap-2 rounded-none border border-white/20 bg-[hsl(220,10%,26%)] p-4">
-            <label className="text-sm font-medium text-white">Единицы</label>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                className={`rounded-none border px-3 py-2 text-sm transition text-white ${unit === 'percent' ? 'border-white/30 bg-white/10' : 'border-white/20 bg-transparent hover:bg-white/10'}`}
-                onClick={() => setUnit('percent')}
-              >
-                Проценты
-              </button>
-              <button
-                type="button"
-                className={`rounded-none border px-3 py-2 text-sm transition text-white ${unit === 'pixels' ? 'border-white/30 bg-white/10' : 'border-white/20 bg-transparent hover:bg-white/10'}`}
-                onClick={() => setUnit('pixels')}
-              >
-                Пиксели
-              </button>
-            </div>
+            <label className="text-sm font-medium text-white">Единицы измерения</label>
+            <select
+              className="h-9 w-full rounded-none border border-white/20 bg-[hsl(220,10%,32%)] px-3 text-sm text-white outline-none focus-visible:border-white/30 focus-visible:ring-2 focus-visible:ring-white/30"
+              value={unit}
+              onChange={(event) => handleUnitChange(event.target.value as ResizeUnit)}
+            >
+              <option value="percent">Проценты</option>
+              <option value="pixels">Пиксели</option>
+            </select>
           </div>
 
-          {unit === 'percent' ? (
-            <div className="grid gap-2 rounded-none border border-white/20 bg-[hsl(220,10%,26%)] p-4">
-              <label className="text-sm font-medium text-white">Масштаб</label>
-              <div className="flex items-center gap-2">
-                <Input
-                  type="number"
-                  min={12}
-                  max={300}
-                  value={percent}
-                  onChange={(event) => handlePercentChange(Number(event.target.value))}
-                />
-                <span className="text-sm text-white/60">%</span>
-              </div>
-              <p className="text-xs text-white/60">Диапазон 12–300%.</p>
-            </div>
-          ) : (
-            <div className="grid gap-4 rounded-none border border-white/20 bg-[hsl(220,10%,26%)] p-4">
+          <div className="grid gap-4 rounded-none border border-white/20 bg-[hsl(220,10%,26%)] p-4">
+            <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
                 <div className="flex items-center justify-between gap-2">
                   <label className="text-sm font-medium text-white">Ширина</label>
-                  <span className="text-xs text-white/60">px</span>
+                  <span className="text-xs text-white/60">{unit === 'percent' ? '%' : 'px'}</span>
                 </div>
                 <Input
                   type="number"
                   min={1}
-                  value={pixelWidth}
-                  onChange={(event) => handlePixelWidthChange(Number(event.target.value))}
+                  value={widthValue}
+                  onChange={(event) => handleWidthChange(Number(event.target.value))}
                 />
               </div>
               <div className="grid gap-2">
                 <div className="flex items-center justify-between gap-2">
                   <label className="text-sm font-medium text-white">Высота</label>
-                  <span className="text-xs text-white/60">px</span>
+                  <span className="text-xs text-white/60">{unit === 'percent' ? '%' : 'px'}</span>
                 </div>
                 <Input
                   type="number"
                   min={1}
-                  value={pixelHeight}
-                  onChange={(event) => handlePixelHeightChange(Number(event.target.value))}
+                  value={heightValue}
+                  onChange={(event) => handleHeightChange(Number(event.target.value))}
                 />
               </div>
-              <label className="inline-flex cursor-pointer items-center gap-2 text-sm text-white">
-                <input
-                  type="checkbox"
-                  checked={keepAspect}
-                  onChange={(event) => setKeepAspect(event.target.checked)}
-                  className="h-4 w-4 rounded border border-white/30 bg-[hsl(220,10%,32%)]"
-                />
-                Сохранить пропорции
-              </label>
             </div>
-          )}
+            <label className="inline-flex cursor-pointer items-center gap-2 text-sm text-white">
+              <input
+                type="checkbox"
+                checked={keepAspect}
+                onChange={(event) => setKeepAspect(event.target.checked)}
+                className="h-4 w-4 rounded border border-white/30 bg-[hsl(220,10%,32%)]"
+              />
+              Сохранить пропорции
+            </label>
+          </div>
 
           <TooltipProvider>
             <div className="grid gap-2 rounded-none border border-white/20 bg-[hsl(220,10%,26%)] p-4">
