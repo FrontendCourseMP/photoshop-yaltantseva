@@ -140,13 +140,21 @@ export function ResizeDialog({ isOpen, onClose, imageData, onApply }: ResizeDial
       return;
     }
 
-    const resized = resizeImageData(imageData, targetDimensions.width, targetDimensions.height, interpolation);
+    const resized = resizeImageData(
+      imageData,
+      targetDimensions.width,
+      targetDimensions.height,
+      interpolation,
+    );
     onApply(resized);
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent overlayClassName="bg-transparent" className="sm:max-w-md bg-[hsl(220,10%,26%)] border-0 text-white">
+      <DialogContent
+        overlayClassName="bg-transparent"
+        className="sm:max-w-md bg-[hsl(220,10%,26%)] border-0 text-white"
+      >
         <DialogHeader>
           <DialogTitle className="text-white">Изменить размер изображения</DialogTitle>
           <DialogDescription className="text-white/60">
@@ -243,9 +251,14 @@ export function ResizeDialog({ isOpen, onClose, imageData, onApply }: ResizeDial
                   </TooltipTrigger>
                   <TooltipContent sideOffset={6} className="max-w-sm">
                     {interpolation === 'bilinear' ? (
-                      <span>Билинейная интерполяция даёт сглаженные результаты и подходит для большинства фотографий.</span>
+                      <span>
+                        Билинейная интерполяция даёт сглаженные результаты и подходит для
+                        большинства фотографий.
+                      </span>
                     ) : (
-                      <span>Ближайший сосед сохраняет резкие края, но может выглядеть пикселизированно.</span>
+                      <span>
+                        Ближайший сосед сохраняет резкие края, но может выглядеть пикселизированно.
+                      </span>
                     )}
                   </TooltipContent>
                 </Tooltip>
@@ -264,7 +277,9 @@ export function ResizeDialog({ isOpen, onClose, imageData, onApply }: ResizeDial
           <div className="grid gap-2 rounded-none border border-white/20 bg-[hsl(220,10%,26%)] p-4">
             <div className="flex items-center justify-between gap-2 text-sm text-white/60">
               <span>Исходное разрешение</span>
-              <span>{originalWidth} × {originalHeight} px</span>
+              <span>
+                {originalWidth} × {originalHeight} px
+              </span>
             </div>
             <div className="flex items-center justify-between gap-2 text-sm text-white/60">
               <span>Исходные мегапиксели</span>
@@ -272,7 +287,9 @@ export function ResizeDialog({ isOpen, onClose, imageData, onApply }: ResizeDial
             </div>
             <div className="flex items-center justify-between gap-2 text-sm text-white/60">
               <span>Итоговое разрешение</span>
-              <span>{targetDimensions.width} × {targetDimensions.height} px</span>
+              <span>
+                {targetDimensions.width} × {targetDimensions.height} px
+              </span>
             </div>
             <div className="flex items-center justify-between gap-2 text-sm text-white/60">
               <span>Итоговые мегапиксели</span>
