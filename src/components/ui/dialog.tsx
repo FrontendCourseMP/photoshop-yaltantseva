@@ -36,7 +36,7 @@ function DialogOverlay({
     <DialogPrimitive.Overlay
       data-slot="dialog-overlay"
       className={cn(
-        'fixed inset-0 isolate z-50 bg-black/30 duration-100 data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0',
+        'fixed inset-0 isolate z-50 bg-black/30 duration-100 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=closed]:animate-out data-[state=closed]:fade-out-0',
         className,
       )}
       {...props}
@@ -103,15 +103,15 @@ const handleMouseDown = (e: React.MouseEvent) => {
         ref={contentRef}
         data-slot="dialog-content"
         className={cn(
-          'fixed z-50 grid w-full max-w-[calc(100%-2rem)] gap-6 bg-popover p-6 text-sm text-popover-foreground shadow-xl ring-1 ring-foreground/5 duration-100 outline-none sm:max-w-md dark:ring-foreground/10 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95',
+          'fixed z-50 grid w-full max-w-[calc(100%-2rem)] gap-6 bg-popover p-6 text-sm text-popover-foreground shadow-xl ring-1 ring-foreground/5 duration-100 outline-none sm:max-w-md dark:ring-foreground/10 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95',
           draggable && 'cursor-move',
           className,
         )}
-        style={draggable ? {
-          left: `calc(50% + ${position.x}px)`,
-          top: `calc(50% + ${position.y}px)`,
+        style={{
+          left: draggable ? `calc(50% + ${position.x}px)` : '50%',
+          top: draggable ? `calc(50% + ${position.y}px)` : '50%',
           transform: 'translate(-50%, -50%)',
-        } : undefined}
+        }}
         onMouseDown={handleMouseDown}
         onPointerDownOutside={(e) => {
           if (disableOutsideClose) {

@@ -1,10 +1,11 @@
 import { MenubarDemo } from './components/Menubar';
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { Canvas } from './components/Canvas';
 import { StatusBar } from './components/StatusBar';
 import { Toolbar } from './components/Toolbar';
 import { ChannelsPanel } from './components/ChannelsPanel';
 import { LevelsDialog } from './components/LevelsDialog';
+import { ResizeDialog } from './components/ResizeDialog';
 import { getColorDepth, getAvailableChannels } from './lib/imageUtils';
 import { resizeImageData } from './lib/interpolation';
 
@@ -30,9 +31,9 @@ function App() {
     gray: true,
   });
   const [isLevelsOpen, setIsLevelsOpen] = useState(false);
+  const [isResizeOpen, setIsResizeOpen] = useState(false);
   const [scale, setScale] = useState(100);
   const [autoScaleEnabled, setAutoScaleEnabled] = useState(true);
-  const [scaledImageData, setScaledImageData] = useState<ImageData | null>(null);
 
   const handleImageLoad = useCallback((data: ImageData, imageFormat?: string) => {
     setImageData(data);
@@ -100,27 +101,34 @@ function App() {
     setIsLevelsOpen(false);
   }, []);
 
+  const handleOpenResize = useCallback(() => {
+    setIsResizeOpen(true);
+  }, []);
+
+  const handleApplyResize = useCallback((newImageData: ImageData) => {
+    setImageData(newImageData);
+    setScale(100);
+    setAutoScaleEnabled(true);
+    setIsResizeOpen(false);
+  }, []);
+
   const sourceImageData = isLevelsOpen
     ? levelsPreviewEnabled
       ? (previewImageData ?? imageData)
       : (originalImageData ?? imageData)
     : imageData;
 
-  useEffect(() => {
-    if (!sourceImageData) {
-      setScaledImageData(null);
-      return;
-    }
+  const scaledImageData = useMemo(() => {
+    if (!sourceImageData) return null;
 
     const targetWidth = Math.max(1, Math.round((sourceImageData.width * scale) / 100));
     const targetHeight = Math.max(1, Math.round((sourceImageData.height * scale) / 100));
 
     if (targetWidth === sourceImageData.width && targetHeight === sourceImageData.height) {
-      setScaledImageData(sourceImageData);
-      return;
+      return sourceImageData;
     }
 
-    setScaledImageData(resizeImageData(sourceImageData, targetWidth, targetHeight));
+    return resizeImageData(sourceImageData, targetWidth, targetHeight);
   }, [sourceImageData, scale]);
 
   useEffect(() => {
@@ -141,7 +149,11 @@ function App() {
     <div className="w-full h-screen flex flex-col">
       {/* Menubar вверху */}
       <div className="border-b p-2 shrink-0">
-        <MenubarDemo onImageLoad={handleImageLoad} onOpenLevels={handleOpenLevels} />
+        <MenubarDemo
+          onImageLoad={handleImageLoad}
+          onOpenLevels={handleOpenLevels}
+          onOpenResize={handleOpenResize}
+        />
       </div>
 
       {/* Основное содержимое: Toolbar + Canvas + ChannelsPanel */}
@@ -189,6 +201,13 @@ function App() {
         onApply={handleLevelsApply}
         onCancel={handleLevelsCancel}
         previewEnabled={levelsPreviewEnabled}
+      />
+
+      <ResizeDialog
+        isOpen={isResizeOpen}
+        onClose={() => setIsResizeOpen(false)}
+        imageData={imageData}
+        onApply={handleApplyResize}
       />
     </div>
   );

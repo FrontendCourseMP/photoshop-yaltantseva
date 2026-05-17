@@ -18,14 +18,16 @@ import {
 export function MenubarDemo({
   onImageLoad,
   onOpenLevels,
+  onOpenResize,
 }: {
   onImageLoad: (d: ImageData, format?: string) => void;
   onOpenLevels: () => void;
+  onOpenResize: () => void;
 }) {
   const { openFile, handleFile, saveAs, inputRef, imageData, format } = useImageFile();
 
   useEffect(() => {
-    if (imageData) onImageLoad(imageData, format);
+    if (imageData) onImageLoad(imageData, format ?? undefined);
   }, [imageData, format, onImageLoad]);
 
   return (
@@ -85,8 +87,11 @@ export function MenubarDemo({
           <MenubarTrigger>Изображение</MenubarTrigger>
           <MenubarContent>
             <MenubarGroup>
-              <MenubarItem onSelect={onOpenLevels}>
+              <MenubarItem onSelect={onOpenLevels} disabled={!imageData}>
                 Уровни... <MenubarShortcut>⌃L</MenubarShortcut>
+              </MenubarItem>
+              <MenubarItem onSelect={onOpenResize} disabled={!imageData}>
+                Размер... <MenubarShortcut>⌃R</MenubarShortcut>
               </MenubarItem>
             </MenubarGroup>
           </MenubarContent>
