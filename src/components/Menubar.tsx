@@ -19,10 +19,12 @@ export function MenubarDemo({
   onImageLoad,
   onOpenLevels,
   onOpenResize,
+  onOpenFilter,
 }: {
   onImageLoad: (d: ImageData, format?: string) => void;
   onOpenLevels: () => void;
   onOpenResize: () => void;
+  onOpenFilter: () => void;
 }) {
   const { openFile, handleFile, saveAs, inputRef, imageData, format } = useImageFile();
 
@@ -121,6 +123,12 @@ export function MenubarDemo({
         <MenubarMenu>
           <MenubarTrigger>Фильтры</MenubarTrigger>
           <MenubarContent>
+            <MenubarGroup>
+              <MenubarItem onSelect={onOpenFilter} disabled={!imageData}>
+                Пользовательский фильтр...
+              </MenubarItem>
+            </MenubarGroup>
+            <MenubarSeparator />
             <MenubarGroup>
               <MenubarItem disabled>Оттенки серого</MenubarItem>
               <MenubarItem disabled>Инверсия</MenubarItem>

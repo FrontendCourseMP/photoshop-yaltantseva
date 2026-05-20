@@ -6,6 +6,7 @@ import { Toolbar } from './components/Toolbar';
 import { ChannelsPanel } from './components/ChannelsPanel';
 import { LevelsDialog } from './components/LevelsDialog';
 import { ResizeDialog } from './components/ResizeDialog';
+import { FilterDialog } from './components/FilterDialog';
 import { getColorDepth, getAvailableChannels } from './lib/imageUtils';
 import { resizeImageData } from './lib/interpolation';
 
@@ -31,7 +32,11 @@ function App() {
     gray: true,
   });
   const [isLevelsOpen, setIsLevelsOpen] = useState(false);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isResizeOpen, setIsResizeOpen] = useState(false);
+  const [filterOriginalImageData, setFilterOriginalImageData] = useState<ImageData | null>(null);
+  const [filterPreviewImageData, setFilterPreviewImageData] = useState<ImageData | null>(null);
+  const [filterPreviewEnabled, setFilterPreviewEnabled] = useState(true);
   const [scale, setScale] = useState(100);
   const [autoScaleEnabled, setAutoScaleEnabled] = useState(true);
 
@@ -105,6 +110,14 @@ function App() {
     setIsResizeOpen(true);
   }, []);
 
+  const handleOpenFilter = useCallback(() => {
+    if (!imageData) return;
+    setFilterOriginalImageData(imageData);
+    setFilterPreviewImageData(imageData);
+    setFilterPreviewEnabled(true);
+    setIsFilterOpen(true);
+  }, [imageData]);
+
   const handleApplyResize = useCallback((newImageData: ImageData) => {
     setImageData(newImageData);
     setScale(100);
@@ -112,11 +125,38 @@ function App() {
     setIsResizeOpen(false);
   }, []);
 
+  const handleFilterPreview = useCallback((preview: ImageData | null) => {
+    setFilterPreviewImageData(preview);
+  }, []);
+
+  const handleFilterTogglePreview = useCallback((enabled: boolean) => {
+    setFilterPreviewEnabled(enabled);
+  }, []);
+
+  const handleFilterApply = useCallback((newImageData: ImageData) => {
+    setImageData(newImageData);
+    setFilterOriginalImageData(null);
+    setFilterPreviewImageData(null);
+    setFilterPreviewEnabled(true);
+    setIsFilterOpen(false);
+  }, []);
+
+  const handleFilterCancel = useCallback(() => {
+    setFilterOriginalImageData(null);
+    setFilterPreviewImageData(null);
+    setFilterPreviewEnabled(true);
+    setIsFilterOpen(false);
+  }, []);
+
   const sourceImageData = isLevelsOpen
     ? levelsPreviewEnabled
       ? (previewImageData ?? imageData)
       : (originalImageData ?? imageData)
-    : imageData;
+    : isFilterOpen
+      ? filterPreviewEnabled
+        ? (filterPreviewImageData ?? imageData)
+        : (filterOriginalImageData ?? imageData)
+      : imageData;
 
   const scaledImageData = useMemo(() => {
     if (!sourceImageData) return null;
@@ -153,6 +193,7 @@ function App() {
           onImageLoad={handleImageLoad}
           onOpenLevels={handleOpenLevels}
           onOpenResize={handleOpenResize}
+          onOpenFilter={handleOpenFilter}
         />
       </div>
 
@@ -201,6 +242,18 @@ function App() {
         onApply={handleLevelsApply}
         onCancel={handleLevelsCancel}
         previewEnabled={levelsPreviewEnabled}
+      />
+
+      <FilterDialog
+        isOpen={isFilterOpen}
+        onClose={handleFilterCancel}
+        imageData={filterOriginalImageData ?? imageData}
+        format={format}
+        onPreview={handleFilterPreview}
+        onPreviewToggle={handleFilterTogglePreview}
+        onApply={handleFilterApply}
+        onCancel={handleFilterCancel}
+        previewEnabled={filterPreviewEnabled}
       />
 
       <ResizeDialog
